@@ -4,6 +4,11 @@
 #include <stdio.h>
 
 // Constant variable definition
+#define LEFT_MOTOR_1 3
+#define LEFT_MOTOR_2 5
+#define RIGHT_MOTOR_1 9
+#define RIGHT_MOTOR_2 10
+
 const int delay_time = 10;
 
 // Private variable definition
@@ -11,7 +16,7 @@ SoftwareSerial bt_communication(7, 6); // RX,TX
 String command = "";
 
 int pwm1, pwm2, dir1, dir2;
-int last_pwm1, last_pwm2 = 0;
+int last_pwm1, last_pwm2, last_dir1, last_dir2 = 0;
 
 // Private function prototypes
 void increase_pwm(int pin, int start, int target);
@@ -48,27 +53,50 @@ void loop()
       //PWM values get adjusted according to the direction data
       if (dir1 == 1)
       {
-        adjust_pwm(3, last_pwm1, pwm1);
+        if (last_dir1 == 0)
+        {
+          adjust_pwm(LEFT_MOTOR_2, last_pwm1, 0);
+          last_pwm1 = 0;
+        }
+        adjust_pwm(LEFT_MOTOR_1, last_pwm1, pwm1);
+        last_dir1 = 1;
       }
       else if (dir1 == 0)
       {
-        adjust_pwm(5, last_pwm1, pwm1);
+        if (last_dir1 == 1)
+        {
+          adjust_pwm(LEFT_MOTOR_1, last_pwm1, 0);
+          last_pwm1 = 0;
+        }
+        adjust_pwm(LEFT_MOTOR_2, last_pwm1, pwm1);
+        last_dir1 = 0;
       }
 
       if (dir2 == 1)
       {
-        adjust_pwm(9,last_pwm2,pwm2);
+        if (last_dir2 == 0)
+        {
+          adjust_pwm(RIGHT_MOTOR_2, last_pwm2, 0);
+          last_pwm2 = 0;
+        }
+        adjust_pwm(RIGHT_MOTOR_1, last_pwm2, pwm2);
+        last_dir2 = 1;
       }
       else if (dir2 == 0)
       {
-        adjust_pwm(10,last_pwm2,pwm2);
+        if (last_dir2 == 1)
+        {
+          adjust_pwm(RIGHT_MOTOR_1, last_pwm2, 0);
+          last_pwm2 = 0;
+        }
+        adjust_pwm(RIGHT_MOTOR_2, last_pwm2, pwm2);
+        last_dir2 = 0;
       }
 
       //Current PWM values get saved as last PWM values.
       last_pwm1 = pwm1;
       last_pwm2 = pwm2;
 
-    
       command = "";
     }
     else
@@ -106,11 +134,14 @@ void decrease_pwm(int pin, int start, int target)
 }
 
 //This function decides if the PWM value should get increased or decreased.
-void adjust_pwm(int pin, int start, int target){
-  if(target-start>0){
+void adjust_pwm(int pin, int start, int target)
+{
+  if (target - start > 0)
+  {
     increase_pwm(pin, start, target);
   }
-  else if(target-start<0){
+  else if (target - start < 0)
+  {
     decrease_pwm(pin, start, target);
   }
 }
@@ -120,10 +151,10 @@ void rake_init(void)
 {
   Serial.begin(9600);
   bt_communication.begin(9600);
-  pinMode(3, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(9, OUTPUT);
-  pinMode(10, OUTPUT);
+  pinMode(LEFT_MOTOR_1, OUTPUT);
+  pinMode(LEFT_MOTOR_2, OUTPUT);
+  pinMode(RIGHT_MOTOR_1, OUTPUT);
+  pinMode(RIGHT_MOTOR_2, OUTPUT);
 }
 
 void printVariables()
